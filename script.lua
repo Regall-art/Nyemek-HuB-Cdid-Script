@@ -1,17 +1,15 @@
--- Driving Empire Script - WORKING VERSION
--- Fixed Money & Car System
--- Analyzes game structure first before executing
+-- Driving Empire Script - DEEP ANALYSIS VERSION
+-- Multiple methods for money and detailed debugging
+-- This version will help you find the EXACT remote that works
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Driving Empire - Working",
-   LoadingTitle = "Driving Empire Script",
-   LoadingSubtitle = "Analyzing Game Structure...",
+   Name = "Driving Empire - Deep Analysis",
+   LoadingTitle = "Driving Empire",
+   LoadingSubtitle = "Finding Working Remotes...",
    ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil,
-      FileName = "DrivingEmpire_Working"
+      Enabled = false,
    },
    Discord = {
       Enabled = false,
@@ -27,152 +25,121 @@ local Workspace = game:GetService("Workspace")
 -- Player
 local player = Players.LocalPlayer
 
--- Game Data Storage
-local GameData = {
-   MoneyRemotes = {},
-   VehicleRemotes = {},
-   PlayerData = nil,
-   MoneyPath = nil,
-   VehiclesPath = nil,
-}
+-- Storage for found remotes
+local AllRemotes = {}
+local MonitoringEnabled = false
 
--- Variables
-_G.MoneyFarm = false
-_G.MoneyAmount = 10000
-_G.FarmDelay = 0.5
+-- Scan ALL remotes in the game
+print("\n" .. string.rep("=", 50))
+print("SCANNING ALL GAME REMOTES")
+print(string.rep("=", 50))
 
--- ============================================
--- ANALYZE GAME STRUCTURE
--- ============================================
-
-print("\n========================================")
-print("ANALYZING DRIVING EMPIRE STRUCTURE")
-print("========================================\n")
-
--- Find Player Data
-task.spawn(function()
-   pcall(function()
-      print("=== SEARCHING PLAYER DATA ===")
-      
-      -- Check common player data locations
-      local dataLocations = {
-         player:FindFirstChild("PlayerData"),
-         player:FindFirstChild("Data"),
-         player:FindFirstChild("PlayerStats"),
-         player:FindFirstChild("Stats"),
-         player:FindFirstChild("leaderstats"),
-      }
-      
-      for _, data in pairs(dataLocations) do
-         if data then
-            print("✓ Found data folder: " .. data.Name)
-            GameData.PlayerData = data
-            
-            -- Search for money value
-            for _, child in pairs(data:GetChildren()) do
-               local name = child.Name:lower()
-               if name:find("cash") or name:find("money") or name:find("coin") then
-                  print("  ✓ Found money: " .. child.Name .. " = " .. tostring(child.Value))
-                  GameData.MoneyPath = child
-               end
-               if name:find("vehicle") or name:find("car") or name:find("owned") then
-                  print("  ✓ Found vehicles: " .. child.Name)
-                  GameData.VehiclesPath = child
-               end
-            end
-         end
-      end
-   end)
-end)
-
--- Find Money Remotes
-task.spawn(function()
-   pcall(function()
-      print("\n=== SEARCHING MONEY REMOTES ===")
-      
-      for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
-         if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-            local name = obj.Name:lower()
-            local path = obj:GetFullName():lower()
-            
-            if name:find("cash") or name:find("money") or name:find("currency") or 
-               path:find("cash") or path:find("money") then
-               table.insert(GameData.MoneyRemotes, obj)
-               print("✓ Money Remote: " .. obj:GetFullName())
-            end
-         end
-      end
-      
-      print("Total Money Remotes: " .. #GameData.MoneyRemotes)
-   end)
-end)
-
--- Find Vehicle Remotes
-task.spawn(function()
-   pcall(function()
-      print("\n=== SEARCHING VEHICLE REMOTES ===")
-      
-      for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
-         if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-            local name = obj.Name:lower()
-            local path = obj:GetFullName():lower()
-            
-            if name:find("vehicle") or name:find("car") or name:find("unlock") or 
-               name:find("buy") or name:find("purchase") or
-               path:find("vehicle") or path:find("car") then
-               table.insert(GameData.VehicleRemotes, obj)
-               print("✓ Vehicle Remote: " .. obj:GetFullName())
-            end
-         end
-      end
-      
-      print("Total Vehicle Remotes: " .. #GameData.VehicleRemotes)
-   end)
-end)
-
-wait(2) -- Wait for analysis to complete
-
-print("\n========================================")
-print("ANALYSIS COMPLETE - LOADING UI")
-print("========================================\n")
-
--- ============================================
--- TAB: MONEY
--- ============================================
-local MoneyTab = Window:CreateTab("💰 Money", 4483362458)
-local MoneySection = MoneyTab:CreateSection("Money System")
-
--- Show detected money system
-if GameData.MoneyPath then
-   MoneyTab:CreateParagraph({
-      Title = "✓ Money System Detected",
-      Content = "Found: " .. GameData.MoneyPath.Name .. "\nCurrent: " .. tostring(GameData.MoneyPath.Value)
-   })
-else
-   MoneyTab:CreateParagraph({
-      Title = "⚠️ Money System Not Found",
-      Content = "Use Debug tab to manually find money system"
-   })
+for _, obj in pairs(game:GetDescendants()) do
+   if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+      table.insert(AllRemotes, obj)
+      print(#AllRemotes .. ". " .. obj:GetFullName())
+   end
 end
 
-MoneyTab:CreateToggle({
-   Name = "Auto Money Farm",
-   CurrentValue = false,
-   Flag = "MoneyFarm",
-   Callback = function(Value)
-      _G.MoneyFarm = Value
-      
-      if Value then
-         Rayfield:Notify({
-            Title = "Money Farm",
-            Content = "Money farming started!",
-            Duration = 3,
-            Image = 4483362458,
-         })
+print("\nTotal Remotes Found: " .. #AllRemotes)
+print(string.rep("=", 50) .. "\n")
+
+-- ============================================
+-- TAB: MONEY DETECTIVE
+-- ============================================
+local MoneyTab = Window:CreateTab("💰 Money Detective", 4483362458)
+
+MoneyTab:CreateParagraph({
+   Title = "🔍 How to Find Working Money Remote",
+   Content = "1. Click 'Start Remote Monitor'\n2. Go buy something in game or earn money\n3. Check console (F9) to see which remote fired\n4. Use that remote number in Manual Fire"
+})
+
+MoneyTab:CreateButton({
+   Name = "🎯 Start Remote Monitor (IMPORTANT!)",
+   Callback = function()
+      StartRemoteMonitor()
+      Rayfield:Notify({
+         Title = "Monitor Started",
+         Content = "Do actions in game! Check F9 console!",
+         Duration = 5,
+         Image = 4483362458,
+      })
+   end,
+})
+
+MoneyTab:CreateButton({
+   Name = "📋 List All Remotes",
+   Callback = function()
+      ListAllRemotes()
+   end,
+})
+
+MoneyTab:CreateSection("Try All Money Methods")
+
+MoneyTab:CreateButton({
+   Name = "💵 Method 1: Fire ALL Remotes with 10K",
+   Callback = function()
+      FireAllRemotesWith10K()
+      Rayfield:Notify({
+         Title = "Method 1",
+         Content = "Fired all " .. #AllRemotes .. " remotes!",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
+
+MoneyTab:CreateButton({
+   Name = "💵 Method 2: leaderstats Direct Edit",
+   Callback = function()
+      EditLeaderstatsDirectly(100000)
+   end,
+})
+
+MoneyTab:CreateButton({
+   Name = "💵 Method 3: PlayerData Edit",
+   Callback = function()
+      EditPlayerData(100000)
+   end,
+})
+
+MoneyTab:CreateButton({
+   Name = "💵 Method 4: Workspace Money Edit",
+   Callback = function()
+      EditWorkspaceMoney(100000)
+   end,
+})
+
+MoneyTab:CreateSection("Manual Remote Testing")
+
+local RemoteNumberInput = MoneyTab:CreateInput({
+   Name = "Remote Number (from monitor)",
+   PlaceholderText = "Enter number (e.g., 15)",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      -- Store for later use
+      _G.SelectedRemoteNumber = tonumber(Text)
+   end,
+})
+
+local MoneyAmountInput = MoneyTab:CreateInput({
+   Name = "Money Amount",
+   PlaceholderText = "Enter amount (e.g., 50000)",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      _G.MoneyAmount = tonumber(Text) or 10000
+   end,
+})
+
+MoneyTab:CreateButton({
+   Name = "🔥 Fire Selected Remote",
+   Callback = function()
+      if _G.SelectedRemoteNumber and AllRemotes[_G.SelectedRemoteNumber] then
+         FireSpecificRemote(_G.SelectedRemoteNumber, _G.MoneyAmount or 10000)
       else
          Rayfield:Notify({
-            Title = "Money Farm",
-            Content = "Money farming stopped!",
+            Title = "Error",
+            Content = "Enter a valid remote number first!",
             Duration = 3,
             Image = 4483362458,
          })
@@ -180,335 +147,433 @@ MoneyTab:CreateToggle({
    end,
 })
 
-MoneyTab:CreateSlider({
-   Name = "Money Amount",
-   Range = {1000, 100000},
-   Increment = 1000,
-   Suffix = " $",
-   CurrentValue = 10000,
-   Flag = "MoneyAmount",
+MoneyTab:CreateSection("Auto Farm (Use After Finding Remote)")
+
+MoneyTab:CreateToggle({
+   Name = "Auto Farm (Selected Remote)",
+   CurrentValue = false,
+   Flag = "AutoFarm",
    Callback = function(Value)
-      _G.MoneyAmount = Value
-   end,
-})
-
-MoneyTab:CreateSlider({
-   Name = "Farm Delay",
-   Range = {0.1, 5},
-   Increment = 0.1,
-   Suffix = "s",
-   CurrentValue = 0.5,
-   Flag = "FarmDelay",
-   Callback = function(Value)
-      _G.FarmDelay = Value
-   end,
-})
-
-MoneyTab:CreateSection("Quick Add")
-
-MoneyTab:CreateButton({
-   Name = "Add 50K",
-   Callback = function()
-      AddMoney(50000)
-   end,
-})
-
-MoneyTab:CreateButton({
-   Name = "Add 100K",
-   Callback = function()
-      AddMoney(100000)
-   end,
-})
-
-MoneyTab:CreateButton({
-   Name = "Add 500K",
-   Callback = function()
-      AddMoney(500000)
-   end,
-})
-
-MoneyTab:CreateButton({
-   Name = "Set to 10M",
-   Callback = function()
-      SetMoney(10000000)
+      _G.AutoFarm = Value
    end,
 })
 
 -- ============================================
--- TAB: VEHICLES
+-- TAB: VEHICLE DETECTIVE
 -- ============================================
-local VehicleTab = Window:CreateTab("🚗 Vehicles", 4483362458)
-local VehicleSection = VehicleTab:CreateSection("Vehicle System")
+local VehicleTab = Window:CreateTab("🚗 Vehicle Detective", 4483362458)
 
-if #GameData.VehicleRemotes > 0 then
-   VehicleTab:CreateParagraph({
-      Title = "✓ Vehicle System Detected",
-      Content = "Found " .. #GameData.VehicleRemotes .. " vehicle remotes"
-   })
-else
-   VehicleTab:CreateParagraph({
-      Title = "⚠️ Vehicle System Not Found",
-      Content = "Use Debug tab to find vehicle system"
-   })
-end
+VehicleTab:CreateParagraph({
+   Title = "🔍 How to Find Working Vehicle Remote",
+   Content = "1. Start Remote Monitor\n2. Buy a cheap car in game\n3. Check console to see which remote fired\n4. Use that remote for unlock all"
+})
 
 VehicleTab:CreateButton({
-   Name = "🔓 Unlock All Vehicles (Method 1)",
+   Name = "🎯 Start Remote Monitor",
    Callback = function()
-      UnlockVehiclesMethod1()
+      StartRemoteMonitor()
       Rayfield:Notify({
-         Title = "Unlock Vehicles",
-         Content = "Method 1 executed!",
-         Duration = 3,
+         Title = "Monitor Started",
+         Content = "Now buy a car! Check F9!",
+         Duration = 5,
          Image = 4483362458,
       })
    end,
 })
 
+VehicleTab:CreateSection("Try All Vehicle Methods")
+
 VehicleTab:CreateButton({
-   Name = "🔓 Unlock All Vehicles (Method 2)",
+   Name = "🚗 Method 1: Fire ALL Remotes (Unlock ID 1-100)",
    Callback = function()
-      UnlockVehiclesMethod2()
-      Rayfield:Notify({
-         Title = "Unlock Vehicles",
-         Content = "Method 2 executed!",
-         Duration = 3,
-         Image = 4483362458,
-      })
+      UnlockMethod1()
    end,
 })
 
 VehicleTab:CreateButton({
-   Name = "🔓 Unlock All Vehicles (Method 3)",
+   Name = "🚗 Method 2: PlayerData Vehicle Edit",
    Callback = function()
-      UnlockVehiclesMethod3()
-      Rayfield:Notify({
-         Title = "Unlock Vehicles",
-         Content = "Method 3 executed!",
-         Duration = 3,
-         Image = 4483362458,
-      })
+      UnlockMethod2()
    end,
 })
 
 VehicleTab:CreateButton({
-   Name = "🎮 GamePass Bypass",
+   Name = "🚗 Method 3: GamePass Bypass",
    Callback = function()
       GamePassBypass()
-      Rayfield:Notify({
-         Title = "GamePass Bypass",
-         Content = "GamePass bypass enabled!",
-         Duration = 3,
-         Image = 4483362458,
-      })
    end,
 })
 
-VehicleTab:CreateSection("Vehicle Modifications")
+VehicleTab:CreateSection("Manual Vehicle Unlock")
 
-VehicleTab:CreateSlider({
-   Name = "Vehicle Speed",
-   Range = {1, 5},
-   Increment = 0.1,
-   Suffix = "x",
-   CurrentValue = 1,
-   Flag = "VehicleSpeed",
-   Callback = function(Value)
-      _G.VehicleSpeed = Value
+local VehicleRemoteInput = VehicleTab:CreateInput({
+   Name = "Remote Number (from monitor)",
+   PlaceholderText = "Enter remote number",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      _G.SelectedVehicleRemote = tonumber(Text)
    end,
 })
 
-VehicleTab:CreateToggle({
-   Name = "Vehicle Noclip",
-   CurrentValue = false,
-   Flag = "VehicleNoclip",
-   Callback = function(Value)
-      _G.VehicleNoclip = Value
+VehicleTab:CreateButton({
+   Name = "🔥 Unlock All Using Selected Remote",
+   Callback = function()
+      if _G.SelectedVehicleRemote and AllRemotes[_G.SelectedVehicleRemote] then
+         UnlockUsingRemote(_G.SelectedVehicleRemote)
+      else
+         Rayfield:Notify({
+            Title = "Error",
+            Content = "Enter remote number first!",
+            Duration = 3,
+            Image = 4483362458,
+         })
+      end
    end,
 })
 
 -- ============================================
--- TAB: DEBUG
+-- TAB: PLAYER INFO
 -- ============================================
-local DebugTab = Window:CreateTab("🔍 Debug", 4483362458)
+local InfoTab = Window:CreateTab("📊 Player Info", 4483362458)
 
-DebugTab:CreateButton({
-   Name = "Print Full Game Structure",
+InfoTab:CreateButton({
+   Name = "Show Current Stats",
    Callback = function()
-      PrintFullStructure()
+      ShowPlayerStats()
    end,
 })
 
-DebugTab:CreateButton({
-   Name = "Print Current Money",
+InfoTab:CreateButton({
+   Name = "Show Player Structure",
    Callback = function()
-      PrintCurrentMoney()
+      ShowPlayerStructure()
    end,
 })
 
-DebugTab:CreateButton({
-   Name = "Print All Money Remotes",
+InfoTab:CreateButton({
+   Name = "Show ReplicatedStorage Structure",
    Callback = function()
-      PrintMoneyRemotes()
+      ShowReplicatedStorageStructure()
    end,
 })
 
-DebugTab:CreateButton({
-   Name = "Print All Vehicle Remotes",
+InfoTab:CreateButton({
+   Name = "Find Money Values in Player",
    Callback = function()
-      PrintVehicleRemotes()
+      FindMoneyInPlayer()
    end,
 })
 
-DebugTab:CreateButton({
-   Name = "Test Money Remote (Safe)",
-   Callback = function()
-      TestMoneyRemote()
-   end,
+-- ============================================
+-- TAB: INSTRUCTIONS
+-- ============================================
+local HelpTab = Window:CreateTab("❓ Instructions", 4483362458)
+
+HelpTab:CreateParagraph({
+   Title = "Step 1: Find Money Remote",
+   Content = "Click 'Start Remote Monitor' in Money tab, then earn money in game (deliver cargo, race, etc). Check console (F9) to see which remote number fired."
 })
 
-DebugTab:CreateButton({
-   Name = "Test Vehicle Remote (Safe)",
-   Callback = function()
-      TestVehicleRemote()
-   end,
+HelpTab:CreateParagraph({
+   Title = "Step 2: Test Remote",
+   Content = "Enter the remote number you found, enter money amount, then click 'Fire Selected Remote'. Check if your money increased."
 })
 
-DebugTab:CreateButton({
-   Name = "Monitor All Remote Calls",
-   Callback = function()
-      MonitorRemoteCalls()
-   end,
+HelpTab:CreateParagraph({
+   Title = "Step 3: Auto Farm",
+   Content = "Once you found the working remote, enable 'Auto Farm' toggle and it will keep firing that remote."
+})
+
+HelpTab:CreateParagraph({
+   Title = "Alternative: Brute Force",
+   Content = "If monitoring doesn't work, use 'Method 1: Fire ALL Remotes with 10K'. It will try every single remote in the game."
 })
 
 -- ============================================
 -- FUNCTIONS
 -- ============================================
 
--- Money Functions
-function AddMoney(amount)
-   local success = false
-   
-   -- Method 1: Direct value change (if possible)
-   if GameData.MoneyPath then
-      pcall(function()
-         GameData.MoneyPath.Value = GameData.MoneyPath.Value + amount
-         success = true
-         print("✓ Added " .. amount .. " using direct value change")
-      end)
+function StartRemoteMonitor()
+   if MonitoringEnabled then
+      print("Monitor already running!")
+      return
    end
    
-   -- Method 2: Fire money remotes
-   if not success and #GameData.MoneyRemotes > 0 then
-      for _, remote in pairs(GameData.MoneyRemotes) do
-         pcall(function()
-            if remote:IsA("RemoteEvent") then
-               remote:FireServer(amount)
-               remote:FireServer("Add", amount)
-               remote:FireServer({Amount = amount})
-               print("✓ Fired remote: " .. remote.Name)
-            elseif remote:IsA("RemoteFunction") then
-               remote:InvokeServer(amount)
-               remote:InvokeServer("Add", amount)
-               print("✓ Invoked remote: " .. remote.Name)
+   MonitoringEnabled = true
+   
+   local mt = getrawmetatable(game)
+   local oldNamecall = mt.__namecall
+   setreadonly(mt, false)
+   
+   mt.__namecall = newcclosure(function(self, ...)
+      local args = {...}
+      local method = getnamecallmethod()
+      
+      if method == "FireServer" or method == "InvokeServer" then
+         -- Find remote number
+         local remoteNum = "?"
+         for i, remote in pairs(AllRemotes) do
+            if remote == self then
+               remoteNum = i
+               break
             end
-         end)
+         end
+         
+         print("\n" .. string.rep("=", 60))
+         print("🔴 REMOTE FIRED!")
+         print("Number: " .. remoteNum)
+         print("Path: " .. self:GetFullName())
+         print("Method: " .. method)
+         
+         -- Print arguments
+         print("Arguments:")
+         for i, arg in pairs(args) do
+            print("  [" .. i .. "] = " .. tostring(arg) .. " (" .. type(arg) .. ")")
+         end
+         print(string.rep("=", 60) .. "\n")
       end
-      success = true
+      
+      return oldNamecall(self, ...)
+   end)
+   
+   setreadonly(mt, true)
+   
+   print("\n🎯 REMOTE MONITOR STARTED!")
+   print("Do actions in game and watch this console!\n")
+end
+
+function ListAllRemotes()
+   print("\n" .. string.rep("=", 60))
+   print("ALL REMOTES IN GAME")
+   print(string.rep("=", 60))
+   
+   for i, remote in pairs(AllRemotes) do
+      print(i .. ". " .. remote:GetFullName() .. " (" .. remote.ClassName .. ")")
    end
    
-   -- Method 3: Try all ReplicatedStorage remotes
-   if not success then
-      for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+   print("\nTotal: " .. #AllRemotes)
+   print(string.rep("=", 60) .. "\n")
+   
+   Rayfield:Notify({
+      Title = "Remotes Listed",
+      Content = "Check console (F9) for " .. #AllRemotes .. " remotes",
+      Duration = 3,
+      Image = 4483362458,
+   })
+end
+
+function FireAllRemotesWith10K()
+   print("\n🔥 FIRING ALL REMOTES WITH 10,000...")
+   local amount = 10000
+   
+   for i, remote in pairs(AllRemotes) do
+      pcall(function()
          if remote:IsA("RemoteEvent") then
-            pcall(function()
-               remote:FireServer(amount)
-               remote:FireServer("AddMoney", amount)
-               remote:FireServer("GiveMoney", amount)
-            end)
+            -- Try multiple argument patterns
+            remote:FireServer(amount)
+            remote:FireServer("Add", amount)
+            remote:FireServer("AddMoney", amount)
+            remote:FireServer({Amount = amount})
+            remote:FireServer({Money = amount})
+            remote:FireServer({Cash = amount})
+            remote:FireServer(player, amount)
+            
+            print("✓ Fired #" .. i .. ": " .. remote.Name)
+         elseif remote:IsA("RemoteFunction") then
+            remote:InvokeServer(amount)
+            remote:InvokeServer("Add", amount)
+            
+            print("✓ Invoked #" .. i .. ": " .. remote.Name)
+         end
+      end)
+      wait(0.05) -- Small delay to avoid overwhelming
+   end
+   
+   print("✓ Finished firing all remotes!")
+end
+
+function EditLeaderstatsDirectly(amount)
+   print("\n💰 Trying leaderstats edit...")
+   local found = false
+   
+   if player:FindFirstChild("leaderstats") then
+      for _, stat in pairs(player.leaderstats:GetChildren()) do
+         if stat:IsA("IntValue") or stat:IsA("NumberValue") then
+            local oldValue = stat.Value
+            stat.Value = stat.Value + amount
+            print("✓ " .. stat.Name .. ": " .. oldValue .. " -> " .. stat.Value)
+            found = true
          end
       end
    end
    
-   if success then
+   if found then
       Rayfield:Notify({
-         Title = "Money Added",
-         Content = "Successfully added $" .. amount,
-         Duration = 2,
+         Title = "leaderstats",
+         Content = "Edited leaderstats!",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   else
+      Rayfield:Notify({
+         Title = "Error",
+         Content = "No leaderstats found!",
+         Duration = 3,
          Image = 4483362458,
       })
    end
 end
 
-function SetMoney(amount)
-   if GameData.MoneyPath then
-      pcall(function()
-         GameData.MoneyPath.Value = amount
-         print("✓ Set money to " .. amount)
-         Rayfield:Notify({
-            Title = "Money Set",
-            Content = "Money set to $" .. amount,
-            Duration = 2,
-            Image = 4483362458,
-         })
-      end)
-   else
-      AddMoney(amount)
-   end
-end
-
--- Vehicle Unlock Functions
-function UnlockVehiclesMethod1()
-   -- Direct player data modification
-   if GameData.VehiclesPath then
-      pcall(function()
-         for i = 1, 200 do
-            local vehicle = Instance.new("BoolValue")
-            vehicle.Name = tostring(i)
-            vehicle.Value = true
-            vehicle.Parent = GameData.VehiclesPath
-         end
-         print("✓ Method 1: Modified player vehicle data")
-      end)
-   end
-end
-
-function UnlockVehiclesMethod2()
-   -- Fire vehicle remotes
-   if #GameData.VehicleRemotes > 0 then
-      for _, remote in pairs(GameData.VehicleRemotes) do
-         pcall(function()
-            for i = 1, 100 do
-               if remote:IsA("RemoteEvent") then
-                  remote:FireServer(i)
-                  remote:FireServer("Unlock", i)
-                  remote:FireServer({VehicleId = i})
+function EditPlayerData(amount)
+   print("\n💰 Trying PlayerData edit...")
+   local found = false
+   
+   local dataFolders = {"Data", "PlayerData", "Stats", "PlayerStats", "Profile"}
+   
+   for _, folderName in pairs(dataFolders) do
+      if player:FindFirstChild(folderName) then
+         for _, value in pairs(player[folderName]:GetDescendants()) do
+            if value:IsA("IntValue") or value:IsA("NumberValue") then
+               local name = value.Name:lower()
+               if name:find("cash") or name:find("money") or name:find("coin") then
+                  local oldValue = value.Value
+                  value.Value = value.Value + amount
+                  print("✓ " .. value:GetFullName() .. ": " .. oldValue .. " -> " .. value.Value)
+                  found = true
                end
             end
-            print("✓ Method 2: Fired remote: " .. remote.Name)
-         end)
+         end
       end
    end
+   
+   if found then
+      Rayfield:Notify({
+         Title = "PlayerData",
+         Content = "Edited player data!",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   else
+      Rayfield:Notify({
+         Title = "Error",
+         Content = "No player data found!",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end
 end
 
-function UnlockVehiclesMethod3()
-   -- Spam all possible vehicle-related remotes
-   pcall(function()
-      for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-         if remote:IsA("RemoteEvent") then
-            local name = remote.Name:lower()
-            if name:find("vehicle") or name:find("car") or name:find("unlock") or name:find("buy") then
-               for i = 1, 50 do
-                  pcall(function()
-                     remote:FireServer(i)
-                     remote:FireServer("Unlock", i)
-                  end)
-               end
-               print("✓ Method 3: Fired remote: " .. remote.Name)
-            end
+function EditWorkspaceMoney(amount)
+   print("\n💰 Trying Workspace edit...")
+   
+   for _, obj in pairs(Workspace:GetDescendants()) do
+      if obj:IsA("IntValue") or obj:IsA("NumberValue") then
+         local name = obj.Name:lower()
+         if name:find("cash") or name:find("money") then
+            local oldValue = obj.Value
+            obj.Value = obj.Value + amount
+            print("✓ " .. obj:GetFullName() .. ": " .. oldValue .. " -> " .. obj.Value)
          end
+      end
+   end
+   
+   Rayfield:Notify({
+      Title = "Workspace",
+      Content = "Tried workspace edit!",
+      Duration = 3,
+      Image = 4483362458,
+   })
+end
+
+function FireSpecificRemote(number, amount)
+   local remote = AllRemotes[number]
+   
+   if not remote then
+      print("❌ Remote #" .. number .. " not found!")
+      return
+   end
+   
+   print("\n🔥 Firing remote #" .. number .. ": " .. remote:GetFullName())
+   
+   pcall(function()
+      if remote:IsA("RemoteEvent") then
+         -- Try many patterns
+         remote:FireServer(amount)
+         remote:FireServer("Add", amount)
+         remote:FireServer("AddMoney", amount)
+         remote:FireServer("AddCash", amount)
+         remote:FireServer({Amount = amount})
+         remote:FireServer({Money = amount})
+         remote:FireServer({Cash = amount})
+         remote:FireServer(player, amount)
+         remote:FireServer(player, "Add", amount)
+         
+         print("✓ Fired with multiple patterns")
+      elseif remote:IsA("RemoteFunction") then
+         remote:InvokeServer(amount)
+         remote:InvokeServer("Add", amount)
+         
+         print("✓ Invoked")
       end
    end)
+   
+   Rayfield:Notify({
+      Title = "Remote Fired",
+      Content = "Fired remote #" .. number,
+      Duration = 2,
+      Image = 4483362458,
+   })
+end
+
+function UnlockMethod1()
+   print("\n🚗 Unlock Method 1: Firing all remotes...")
+   
+   for i, remote in pairs(AllRemotes) do
+      pcall(function()
+         if remote:IsA("RemoteEvent") then
+            for carId = 1, 100 do
+               remote:FireServer(carId)
+               remote:FireServer("Unlock", carId)
+               remote:FireServer("Buy", carId)
+               remote:FireServer({VehicleId = carId})
+               remote:FireServer({CarId = carId})
+            end
+         end
+      end)
+   end
+   
+   Rayfield:Notify({
+      Title = "Method 1",
+      Content = "Fired all remotes for 100 cars!",
+      Duration = 3,
+      Image = 4483362458,
+   })
+end
+
+function UnlockMethod2()
+   print("\n🚗 Unlock Method 2: PlayerData edit...")
+   
+   local vehicleFolders = {"OwnedVehicles", "Vehicles", "Cars", "OwnedCars"}
+   
+   for _, folderName in pairs(vehicleFolders) do
+      if player:FindFirstChild(folderName) then
+         for i = 1, 200 do
+            local value = Instance.new("BoolValue")
+            value.Name = tostring(i)
+            value.Value = true
+            value.Parent = player[folderName]
+         end
+         
+         print("✓ Created 200 vehicle entries in " .. folderName)
+      end
+   end
+   
+   Rayfield:Notify({
+      Title = "Method 2",
+      Content = "Modified player vehicle data!",
+      Duration = 3,
+      Image = 4483362458,
+   })
 end
 
 function GamePassBypass()
@@ -528,22 +593,74 @@ function GamePassBypass()
       end)
       
       setreadonly(mt, true)
+      
       print("✓ GamePass bypass enabled")
+      
+      Rayfield:Notify({
+         Title = "GamePass",
+         Content = "GamePass bypass enabled!",
+         Duration = 3,
+         Image = 4483362458,
+      })
    end)
 end
 
--- Debug Functions
-function PrintFullStructure()
-   print("\n========================================")
-   print("FULL GAME STRUCTURE")
-   print("========================================\n")
+function UnlockUsingRemote(number)
+   local remote = AllRemotes[number]
    
-   print("=== PLAYER DATA ===")
+   if not remote then
+      print("❌ Remote not found!")
+      return
+   end
+   
+   print("\n🚗 Unlocking using remote #" .. number)
+   
+   for carId = 1, 150 do
+      pcall(function()
+         if remote:IsA("RemoteEvent") then
+            remote:FireServer(carId)
+            remote:FireServer("Unlock", carId)
+            remote:FireServer({VehicleId = carId})
+         end
+      end)
+      wait(0.1)
+   end
+   
+   Rayfield:Notify({
+      Title = "Unlock",
+      Content = "Attempted unlock using remote #" .. number,
+      Duration = 3,
+      Image = 4483362458,
+   })
+end
+
+function ShowPlayerStats()
+   print("\n" .. string.rep("=", 60))
+   print("PLAYER STATS")
+   print(string.rep("=", 60))
+   
+   if player:FindFirstChild("leaderstats") then
+      print("\nleaderstats:")
+      for _, stat in pairs(player.leaderstats:GetChildren()) do
+         print("  " .. stat.Name .. " = " .. tostring(stat.Value))
+      end
+   end
+   
+   print(string.rep("=", 60) .. "\n")
+end
+
+function ShowPlayerStructure()
+   print("\n" .. string.rep("=", 60))
+   print("PLAYER STRUCTURE")
+   print(string.rep("=", 60))
+   
    for _, obj in pairs(player:GetChildren()) do
-      print("├─ " .. obj.Name .. " (" .. obj.ClassName .. ")")
+      print("\n├─ " .. obj.Name .. " (" .. obj.ClassName .. ")")
+      
       if obj:IsA("Folder") or obj:IsA("Configuration") then
          for _, child in pairs(obj:GetChildren()) do
             print("│  ├─ " .. child.Name .. " (" .. child.ClassName .. ")")
+            
             if child:IsA("ValueBase") then
                print("│  │  └─ Value: " .. tostring(child.Value))
             end
@@ -551,181 +668,61 @@ function PrintFullStructure()
       end
    end
    
-   print("\n=== REPLICATED STORAGE ===")
+   print(string.rep("=", 60) .. "\n")
+end
+
+function ShowReplicatedStorageStructure()
+   print("\n" .. string.rep("=", 60))
+   print("REPLICATED STORAGE STRUCTURE")
+   print(string.rep("=", 60))
+   
    for _, obj in pairs(ReplicatedStorage:GetChildren()) do
-      print("├─ " .. obj.Name .. " (" .. obj.ClassName .. ")")
+      print("\n├─ " .. obj.Name .. " (" .. obj.ClassName .. ")")
    end
    
-   Rayfield:Notify({
-      Title = "Debug",
-      Content = "Structure printed to console (F9)",
-      Duration = 3,
-      Image = 4483362458,
-   })
+   print(string.rep("=", 60) .. "\n")
 end
 
-function PrintCurrentMoney()
-   print("\n=== CURRENT MONEY ===")
+function FindMoneyInPlayer()
+   print("\n" .. string.rep("=", 60))
+   print("SEARCHING FOR MONEY VALUES")
+   print(string.rep("=", 60))
    
-   if GameData.MoneyPath then
-      print("Money: " .. tostring(GameData.MoneyPath.Value))
-      Rayfield:Notify({
-         Title = "Current Money",
-         Content = "$" .. tostring(GameData.MoneyPath.Value),
-         Duration = 3,
-         Image = 4483362458,
-      })
-   else
-      print("Money path not found!")
-      Rayfield:Notify({
-         Title = "Error",
-         Content = "Money system not detected",
-         Duration = 3,
-         Image = 4483362458,
-      })
-   end
-end
-
-function PrintMoneyRemotes()
-   print("\n=== MONEY REMOTES ===")
-   for i, remote in pairs(GameData.MoneyRemotes) do
-      print(i .. ". " .. remote:GetFullName())
-   end
-   print("Total: " .. #GameData.MoneyRemotes)
-   
-   Rayfield:Notify({
-      Title = "Money Remotes",
-      Content = "Found " .. #GameData.MoneyRemotes .. " remotes (Check F9)",
-      Duration = 3,
-      Image = 4483362458,
-   })
-end
-
-function PrintVehicleRemotes()
-   print("\n=== VEHICLE REMOTES ===")
-   for i, remote in pairs(GameData.VehicleRemotes) do
-      print(i .. ". " .. remote:GetFullName())
-   end
-   print("Total: " .. #GameData.VehicleRemotes)
-   
-   Rayfield:Notify({
-      Title = "Vehicle Remotes",
-      Content = "Found " .. #GameData.VehicleRemotes .. " remotes (Check F9)",
-      Duration = 3,
-      Image = 4483362458,
-   })
-end
-
-function TestMoneyRemote()
-   if #GameData.MoneyRemotes > 0 then
-      local remote = GameData.MoneyRemotes[1]
-      pcall(function()
-         if remote:IsA("RemoteEvent") then
-            remote:FireServer(1000)
-            print("✓ Tested: " .. remote:GetFullName())
+   for _, obj in pairs(player:GetDescendants()) do
+      if obj:IsA("IntValue") or obj:IsA("NumberValue") then
+         local name = obj.Name:lower()
+         if name:find("cash") or name:find("money") or name:find("coin") or name:find("currency") then
+            print("\n✓ FOUND: " .. obj:GetFullName())
+            print("  Value: " .. tostring(obj.Value))
+            print("  Type: " .. obj.ClassName)
          end
-      end)
-      Rayfield:Notify({
-         Title = "Test",
-         Content = "Sent 1000 to first money remote",
-         Duration = 3,
-         Image = 4483362458,
-      })
-   end
-end
-
-function TestVehicleRemote()
-   if #GameData.VehicleRemotes > 0 then
-      local remote = GameData.VehicleRemotes[1]
-      pcall(function()
-         if remote:IsA("RemoteEvent") then
-            remote:FireServer(1)
-            print("✓ Tested: " .. remote:GetFullName())
-         end
-      end)
-      Rayfield:Notify({
-         Title = "Test",
-         Content = "Sent request to first vehicle remote",
-         Duration = 3,
-         Image = 4483362458,
-      })
-   end
-end
-
-function MonitorRemoteCalls()
-   local mt = getrawmetatable(game)
-   local oldNamecall = mt.__namecall
-   setreadonly(mt, false)
-   
-   mt.__namecall = newcclosure(function(self, ...)
-      local args = {...}
-      local method = getnamecallmethod()
-      
-      if method == "FireServer" or method == "InvokeServer" then
-         print("🔴 REMOTE: " .. self:GetFullName())
-         print("   Method: " .. method)
-         print("   Args: " .. table.concat(args, ", "))
       end
-      
-      return oldNamecall(self, ...)
-   end)
+   end
    
-   setreadonly(mt, true)
-   
-   Rayfield:Notify({
-      Title = "Monitor Active",
-      Content = "Monitoring all remote calls (Check F9)",
-      Duration = 5,
-      Image = 4483362458,
-   })
+   print(string.rep("=", 60) .. "\n")
 end
 
--- ============================================
--- LOOPS
--- ============================================
-
--- Money Farm Loop
+-- Auto Farm Loop
 spawn(function()
-   while wait(_G.FarmDelay) do
-      if _G.MoneyFarm then
+   while wait(0.5) do
+      if _G.AutoFarm and _G.SelectedRemoteNumber then
          pcall(function()
-            AddMoney(_G.MoneyAmount)
+            FireSpecificRemote(_G.SelectedRemoteNumber, _G.MoneyAmount or 10000)
          end)
       end
    end
 end)
 
--- Vehicle Noclip Loop
-spawn(function()
-   while wait(0.2) do
-      if _G.VehicleNoclip then
-         pcall(function()
-            local character = player.Character
-            if character then
-               for _, v in pairs(Workspace:GetDescendants()) do
-                  if v:IsA("VehicleSeat") and v.Occupant and v.Occupant.Parent == character then
-                     for _, part in pairs(v.Parent:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                           part.CanCollide = false
-                        end
-                     end
-                  end
-               end
-            end
-         end)
-      end
-   end
-end)
-
--- Success
+-- Load notification
 Rayfield:Notify({
    Title = "Script Loaded",
-   Content = "Driving Empire script loaded! Check Debug tab for analysis.",
+   Content = "Use Money Detective to find working remote!",
    Duration = 5,
    Image = 4483362458,
 })
 
-print("\n========================================")
-print("DRIVING EMPIRE SCRIPT LOADED")
-print("Use Debug tab to verify systems detected")
-print("========================================\n")
+print("\n" .. string.rep("=", 60))
+print("DRIVING EMPIRE - DEEP ANALYSIS")
+print("Found " .. #AllRemotes .. " total remotes")
+print("Use 'Start Remote Monitor' and do actions in game!")
+print(string.rep("=", 60) .. "\n")
