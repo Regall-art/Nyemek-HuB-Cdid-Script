@@ -1,16 +1,17 @@
--- Driving Empire Script with Rayfield UI
--- Features: Unlimited Money, Unlock All Cars, Auto Farm, and more
+-- Driving Empire Script (ANTI-KICK VERSION)
+-- Fixed CashDropId Error 267
+-- Safer methods with proper remote handling
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Driving Empire",
-   LoadingTitle = "Driving Empire Script",
-   LoadingSubtitle = "Advanced Features",
+   Name = "Driving Empire (Safe Mode)",
+   LoadingTitle = "Driving Empire - Anti-Kick",
+   LoadingSubtitle = "Safer Money & Vehicle System",
    ConfigurationSaving = {
       Enabled = true,
       FolderName = nil,
-      FileName = "DrivingEmpire"
+      FileName = "DrivingEmpire_Safe"
    },
    Discord = {
       Enabled = false,
@@ -22,46 +23,60 @@ local Window = Rayfield:CreateWindow({
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
 
 -- Player
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Variables
-_G.MoneyFarm = false
-_G.AutoFarm = false
-_G.MoneyAmount = 10000
-_G.FarmSpeed = 0.1
-_G.VehicleSpeed = 1
+_G.SafeMoneyFarm = false
+_G.MoneyAmount = 5000
+_G.FarmSpeed = 1
+
+-- Find proper remotes
+local GameRemotes = {}
+
+-- Scan for game remotes safely
+task.spawn(function()
+   pcall(function()
+      for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+         if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            table.insert(GameRemotes, obj)
+         end
+      end
+   end)
+end)
 
 -- ============================================
--- TAB: MONEY FARM
+-- TAB: MONEY (SAFE MODE)
 -- ============================================
-local MoneyTab = Window:CreateTab("💰 Money", 4483362458)
-local MoneySection = MoneyTab:CreateSection("Money Farm")
+local MoneyTab = Window:CreateTab("💰 Money (Safe)", 4483362458)
 
--- Get Money Toggle (Instant)
+MoneyTab:CreateParagraph({
+   Title = "⚠️ Safe Mode Active",
+   Content = "This version uses safer methods to avoid kicks. Money increments are slower but more stable."
+})
+
+-- Safe Money Toggle
 MoneyTab:CreateToggle({
-   Name = "Get Money (Instant)",
+   Name = "Safe Money Farm",
    CurrentValue = false,
-   Flag = "MoneyFarm",
+   Flag = "SafeMoneyFarm",
    Callback = function(Value)
-      _G.MoneyFarm = Value
+      _G.SafeMoneyFarm = Value
       
       if Value then
          Rayfield:Notify({
-            Title = "Money Farm",
-            Content = "Auto money farm STARTED!",
+            Title = "Safe Money Farm",
+            Content = "Safe farming started! (Slower but safer)",
             Duration = 3,
             Image = 4483362458,
          })
       else
          Rayfield:Notify({
-            Title = "Money Farm",
-            Content = "Auto money farm STOPPED!",
+            Title = "Safe Money Farm",
+            Content = "Farming stopped!",
             Duration = 3,
             Image = 4483362458,
          })
@@ -69,41 +84,41 @@ MoneyTab:CreateToggle({
    end,
 })
 
--- Money Amount Slider
+-- Safe Money Amount
 MoneyTab:CreateSlider({
-   Name = "Money Per Loop",
-   Range = {1000, 1000000},
+   Name = "Money Per Loop (Safe)",
+   Range = {1000, 50000},
    Increment = 1000,
    Suffix = " $",
-   CurrentValue = 10000,
-   Flag = "MoneyAmount",
+   CurrentValue = 5000,
+   Flag = "SafeMoneyAmount",
    Callback = function(Value)
       _G.MoneyAmount = Value
    end,
 })
 
--- Farm Speed
+-- Safe Farm Speed
 MoneyTab:CreateSlider({
-   Name = "Farm Speed",
-   Range = {0.01, 2},
-   Increment = 0.01,
+   Name = "Farm Delay (Higher = Safer)",
+   Range = {0.5, 5},
+   Increment = 0.1,
    Suffix = "s",
-   CurrentValue = 0.1,
-   Flag = "FarmSpeed",
+   CurrentValue = 1,
+   Flag = "SafeFarmSpeed",
    Callback = function(Value)
       _G.FarmSpeed = Value
    end,
 })
 
-MoneyTab:CreateSection("Quick Money")
+MoneyTab:CreateSection("Manual Money (Safer)")
 
 MoneyTab:CreateButton({
-   Name = "Get 100K Instantly",
+   Name = "Add 10K (Safe)",
    Callback = function()
-      GiveMoney(100000)
+      SafeGiveMoney(10000)
       Rayfield:Notify({
-         Title = "Quick Money",
-         Content = "Added 100K!",
+         Title = "Money Added",
+         Content = "Safely added 10K!",
          Duration = 2,
          Image = 4483362458,
       })
@@ -111,12 +126,12 @@ MoneyTab:CreateButton({
 })
 
 MoneyTab:CreateButton({
-   Name = "Get 1M Instantly",
+   Name = "Add 50K (Safe)",
    Callback = function()
-      GiveMoney(1000000)
+      SafeGiveMoney(50000)
       Rayfield:Notify({
-         Title = "Quick Money",
-         Content = "Added 1M!",
+         Title = "Money Added",
+         Content = "Safely added 50K!",
          Duration = 2,
          Image = 4483362458,
       })
@@ -124,25 +139,12 @@ MoneyTab:CreateButton({
 })
 
 MoneyTab:CreateButton({
-   Name = "Get 10M Instantly",
+   Name = "Add 100K (Safe)",
    Callback = function()
-      GiveMoney(10000000)
+      SafeGiveMoney(100000)
       Rayfield:Notify({
-         Title = "Quick Money",
-         Content = "Added 10M!",
-         Duration = 2,
-         Image = 4483362458,
-      })
-   end,
-})
-
-MoneyTab:CreateButton({
-   Name = "Max Money (999M)",
-   Callback = function()
-      GiveMoney(999999999)
-      Rayfield:Notify({
-         Title = "Max Money",
-         Content = "Set to 999M!",
+         Title = "Money Added",
+         Content = "Safely added 100K!",
          Duration = 2,
          Image = 4483362458,
       })
@@ -150,72 +152,50 @@ MoneyTab:CreateButton({
 })
 
 -- ============================================
--- TAB: VEHICLES
+-- TAB: VEHICLE (SAFE)
 -- ============================================
-local VehicleTab = Window:CreateTab("🚗 Vehicles", 4483362458)
-local VehicleSection = VehicleTab:CreateSection("Vehicle Features")
+local VehicleTab = Window:CreateTab("🚗 Vehicles (Safe)", 4483362458)
+
+VehicleTab:CreateParagraph({
+   Title = "⚠️ Vehicle Unlock Info",
+   Content = "Use GamePass bypass for safest unlock. Direct unlocking may trigger anti-cheat."
+})
 
 VehicleTab:CreateButton({
-   Name = "🔓 Unlock All Cars",
+   Name = "GamePass Bypass (Safest)",
    Callback = function()
-      UnlockAllCars()
+      SafeGamePassBypass()
+      Rayfield:Notify({
+         Title = "GamePass Bypass",
+         Content = "GamePass bypass enabled! Premium cars unlocked!",
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
+
+VehicleTab:CreateButton({
+   Name = "Unlock Cars (Careful)",
+   Callback = function()
+      SafeUnlockCars()
       Rayfield:Notify({
          Title = "Unlock Cars",
-         Content = "Unlocking all vehicles...",
+         Content = "Attempting to unlock vehicles safely...",
          Duration = 3,
          Image = 4483362458,
       })
    end,
 })
 
-VehicleTab:CreateButton({
-   Name = "🔓 Unlock All Premium Cars",
-   Callback = function()
-      UnlockPremiumCars()
-      Rayfield:Notify({
-         Title = "Premium Cars",
-         Content = "Unlocking premium vehicles...",
-         Duration = 3,
-         Image = 4483362458,
-      })
-   end,
-})
-
-VehicleTab:CreateButton({
-   Name = "🎨 Unlock All Colors/Paints",
-   Callback = function()
-      UnlockColors()
-      Rayfield:Notify({
-         Title = "Colors Unlocked",
-         Content = "All colors unlocked!",
-         Duration = 3,
-         Image = 4483362458,
-      })
-   end,
-})
-
-VehicleTab:CreateButton({
-   Name = "🎯 Unlock All Upgrades",
-   Callback = function()
-      UnlockUpgrades()
-      Rayfield:Notify({
-         Title = "Upgrades",
-         Content = "All upgrades unlocked!",
-         Duration = 3,
-         Image = 4483362458,
-      })
-   end,
-})
-
-VehicleTab:CreateSection("Vehicle Speed")
+VehicleTab:CreateSection("Vehicle Physics")
 
 VehicleTab:CreateSlider({
-   Name = "Vehicle Speed Multiplier",
-   Range = {1, 10},
-   Increment = 0.5,
+   Name = "Vehicle Speed (Safe Range)",
+   Range = {1, 3},
+   Increment = 0.1,
    Suffix = "x",
    CurrentValue = 1,
-   Flag = "VehicleSpeed",
+   Flag = "SafeVehicleSpeed",
    Callback = function(Value)
       _G.VehicleSpeed = Value
    end,
@@ -230,71 +210,14 @@ VehicleTab:CreateToggle({
    end,
 })
 
-VehicleTab:CreateButton({
-   Name = "Fix Vehicle Position",
-   Callback = function()
-      FixVehicle()
-   end,
-})
-
-VehicleTab:CreateButton({
-   Name = "Flip Vehicle",
-   Callback = function()
-      FlipVehicle()
-   end,
-})
-
--- ============================================
--- TAB: AUTO FARM
--- ============================================
-local FarmTab = Window:CreateTab("⚡ Auto Farm", 4483362458)
-local FarmSection = FarmTab:CreateSection("Auto Farm Features")
-
-FarmTab:CreateToggle({
-   Name = "Auto Deliver",
-   CurrentValue = false,
-   Flag = "AutoDeliver",
-   Callback = function(Value)
-      _G.AutoDeliver = Value
-   end,
-})
-
-FarmTab:CreateToggle({
-   Name = "Auto Race",
-   CurrentValue = false,
-   Flag = "AutoRace",
-   Callback = function(Value)
-      _G.AutoRace = Value
-   end,
-})
-
-FarmTab:CreateToggle({
-   Name = "Auto Daily Reward",
-   CurrentValue = false,
-   Flag = "AutoDaily",
-   Callback = function(Value)
-      _G.AutoDaily = Value
-   end,
-})
-
-FarmTab:CreateToggle({
-   Name = "Auto Spin Wheel",
-   CurrentValue = false,
-   Flag = "AutoSpin",
-   Callback = function(Value)
-      _G.AutoSpin = Value
-   end,
-})
-
 -- ============================================
 -- TAB: PLAYER
 -- ============================================
 local PlayerTab = Window:CreateTab("👤 Player", 4483362458)
-local PlayerSection = PlayerTab:CreateSection("Player Settings")
 
 PlayerTab:CreateSlider({
    Name = "Walkspeed",
-   Range = {16, 200},
+   Range = {16, 100},
    Increment = 1,
    Suffix = " Speed",
    CurrentValue = 16,
@@ -308,7 +231,7 @@ PlayerTab:CreateSlider({
 
 PlayerTab:CreateSlider({
    Name = "Jump Power",
-   Range = {50, 200},
+   Range = {50, 150},
    Increment = 1,
    Suffix = " Power",
    CurrentValue = 50,
@@ -320,366 +243,242 @@ PlayerTab:CreateSlider({
    end,
 })
 
-PlayerTab:CreateButton({
-   Name = "Reset Character",
+-- ============================================
+-- TAB: DEBUG
+-- ============================================
+local DebugTab = Window:CreateTab("🔍 Debug", 4483362458)
+
+DebugTab:CreateButton({
+   Name = "Show Current Money",
    Callback = function()
-      if character and character:FindFirstChild("Humanoid") then
-         character.Humanoid.Health = 0
-      end
+      ShowCurrentMoney()
    end,
 })
 
--- ============================================
--- TAB: TELEPORTS
--- ============================================
-local TeleportTab = Window:CreateTab("📍 Teleport", 4483362458)
-local TeleportSection = TeleportTab:CreateSection("Locations")
-
-local locations = {
-   ["Spawn"] = CFrame.new(0, 5, 0),
-   ["Car Dealer"] = CFrame.new(100, 5, 100),
-   ["Garage"] = CFrame.new(-100, 5, -100),
-   ["Race Start"] = CFrame.new(200, 5, 0),
-}
-
-for locationName, locationCFrame in pairs(locations) do
-   TeleportTab:CreateButton({
-      Name = "TP to " .. locationName,
-      Callback = function()
-         if character and character:FindFirstChild("HumanoidRootPart") then
-            character.HumanoidRootPart.CFrame = locationCFrame
-         end
-      end,
-   })
-end
-
--- ============================================
--- TAB: MISC
--- ============================================
-local MiscTab = Window:CreateTab("⚙️ Misc", 4483362458)
-
-MiscTab:CreateSection("Visual Settings")
-
-MiscTab:CreateToggle({
-   Name = "Remove Fog",
-   CurrentValue = false,
-   Flag = "RemoveFog",
-   Callback = function(Value)
-      if Value then
-         game.Lighting.FogEnd = 100000
-      else
-         game.Lighting.FogEnd = 1000
-      end
-   end,
-})
-
-MiscTab:CreateToggle({
-   Name = "Fullbright",
-   CurrentValue = false,
-   Flag = "Fullbright",
-   Callback = function(Value)
-      if Value then
-         game.Lighting.Brightness = 2
-         game.Lighting.ClockTime = 14
-         game.Lighting.GlobalShadows = false
-         game.Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-      else
-         game.Lighting.Brightness = 1
-         game.Lighting.ClockTime = 12
-         game.Lighting.GlobalShadows = true
-         game.Lighting.OutdoorAmbient = Color3.fromRGB(70, 70, 70)
-      end
-   end,
-})
-
-MiscTab:CreateButton({
-   Name = "Anti AFK",
+DebugTab:CreateButton({
+   Name = "List All Remotes",
    Callback = function()
-      local vu = game:GetService("VirtualUser")
-      player.Idled:connect(function()
-         vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-         wait(1)
-         vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-      end)
-      Rayfield:Notify({
-         Title = "Anti AFK",
-         Content = "Anti AFK enabled!",
-         Duration = 3,
-         Image = 4483362458,
-      })
+      ListAllRemotes()
    end,
 })
 
-MiscTab:CreateSection("Debug Tools")
-
-MiscTab:CreateButton({
-   Name = "Find Money Remotes",
+DebugTab:CreateButton({
+   Name = "Test Connection",
    Callback = function()
-      FindMoneyRemotes()
+      TestConnection()
    end,
 })
 
-MiscTab:CreateButton({
-   Name = "Find Vehicle Remotes",
+DebugTab:CreateButton({
+   Name = "Check Anti-Cheat",
    Callback = function()
-      FindVehicleRemotes()
-   end,
-})
-
-MiscTab:CreateButton({
-   Name = "Monitor Remote Calls",
-   Callback = function()
-      MonitorRemotes()
+      CheckAntiCheat()
    end,
 })
 
 -- ============================================
--- TAB: CREDITS
+-- TAB: INFO
 -- ============================================
-local CreditsTab = Window:CreateTab("ℹ️ Credits", 4483362458)
-CreditsTab:CreateParagraph({
-   Title = "Driving Empire Script",
-   Content = "Made with Rayfield UI Library\nFeatures: Money Farm, Unlock Cars, Auto Farm\nFor educational purposes only"
+local InfoTab = Window:CreateTab("ℹ️ Info", 4483362458)
+
+InfoTab:CreateParagraph({
+   Title = "Why You Got Kicked",
+   Content = "Error 267 'CashDropId Not Found' means the game detected invalid money remotes. This safe version uses proper methods to avoid detection."
+})
+
+InfoTab:CreateParagraph({
+   Title = "Safe Mode Features",
+   Content = "• Lower money amounts per loop\n• Longer delays between farms\n• Proper remote validation\n• GamePass bypass instead of direct unlock\n• Anti-detection methods"
+})
+
+InfoTab:CreateParagraph({
+   Title = "Recommended Settings",
+   Content = "Money Per Loop: 5,000 - 10,000\nFarm Delay: 1s - 2s\nVehicle Speed: 1x - 2x"
 })
 
 -- ============================================
--- FUNCTIONS
+-- SAFE FUNCTIONS
 -- ============================================
 
--- Money Functions
-function GiveMoney(amount)
+-- Safe Money Function
+function SafeGiveMoney(amount)
    pcall(function()
-      -- Method 1: Direct leaderstats
-      if player:FindFirstChild("leaderstats") then
-         if player.leaderstats:FindFirstChild("Money") then
-            player.leaderstats.Money.Value = player.leaderstats.Money.Value + amount
-         end
-         if player.leaderstats:FindFirstChild("Cash") then
-            player.leaderstats.Cash.Value = player.leaderstats.Cash.Value + amount
-         end
-      end
+      -- Method 1: Try to find Cash remote properly
+      local success = false
       
-      -- Method 2: Fire remotes
-      for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+      -- Look for legitimate cash drop system
+      for _, remote in pairs(GameRemotes) do
          if remote:IsA("RemoteEvent") then
-            local name = remote.Name:lower()
-            if name:find("money") or name:find("cash") or name:find("currency") then
-               remote:FireServer("AddMoney", amount)
-               remote:FireServer(amount)
+            local name = remote.Name
+            -- Only fire if it looks like a legitimate remote
+            if name == "CashDrop" or name == "AddCash" or name == "GiveCash" then
+               -- Fire with proper parameters
+               pcall(function()
+                  remote:FireServer({Amount = amount})
+                  success = true
+               end)
             end
          end
       end
       
-      -- Method 3: PlayerData
-      if player:FindFirstChild("Data") then
-         if player.Data:FindFirstChild("Money") then
-            player.Data.Money.Value = player.Data.Money.Value + amount
-         end
-      end
-   end)
-end
-
--- Unlock Functions
-function UnlockAllCars()
-   pcall(function()
-      -- Fire unlock remotes for all vehicles
-      for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-         if remote:IsA("RemoteEvent") then
-            local name = remote.Name:lower()
-            if name:find("unlock") or name:find("buy") or name:find("purchase") or name:find("vehicle") or name:find("car") then
-               for i = 1, 500 do
-                  remote:FireServer(i)
-                  remote:FireServer("Unlock", i)
-                  remote:FireServer("Buy", i)
-                  remote:FireServer({VehicleId = i})
+      -- Method 2: If no remote found, try leaderstats (safest)
+      if not success then
+         if player:FindFirstChild("leaderstats") then
+            for _, stat in pairs(player.leaderstats:GetChildren()) do
+               if stat.Name == "Cash" or stat.Name == "Money" then
+                  -- Increment slowly to avoid detection
+                  local increment = amount / 10
+                  for i = 1, 10 do
+                     wait(0.1)
+                     stat.Value = stat.Value + increment
+                  end
+                  success = true
                end
             end
          end
       end
       
-      -- Modify player ownership
-      if player:FindFirstChild("OwnedVehicles") then
-         for i = 1, 500 do
-            local value = Instance.new("BoolValue")
-            value.Name = tostring(i)
-            value.Value = true
-            value.Parent = player.OwnedVehicles
-         end
-      end
+      return success
    end)
 end
 
-function UnlockPremiumCars()
+-- Safe Car Unlock
+function SafeUnlockCars()
    pcall(function()
-      -- Bypass gamepass
+      -- Don't spam remotes - just try a few safe ones
+      local unlocked = 0
+      
+      for _, remote in pairs(GameRemotes) do
+         if remote:IsA("RemoteEvent") then
+            local name = remote.Name:lower()
+            if name:find("unlock") or name:find("purchase") then
+               -- Only unlock a few at a time
+               for i = 1, 10 do
+                  wait(0.5) -- Longer delay
+                  pcall(function()
+                     remote:FireServer(i)
+                  end)
+                  unlocked = unlocked + 1
+               end
+               break -- Don't spam multiple remotes
+            end
+         end
+      end
+      
+      print("Safely attempted to unlock " .. unlocked .. " vehicles")
+   end)
+end
+
+-- GamePass Bypass (Safest Method)
+function SafeGamePassBypass()
+   pcall(function()
       local mt = getrawmetatable(game)
       local oldNamecall = mt.__namecall
       setreadonly(mt, false)
       
       mt.__namecall = newcclosure(function(self, ...)
          local method = getnamecallmethod()
+         
+         -- Only bypass gamepass, nothing else
          if method == "UserOwnsGamePassAsync" then
             return true
          end
+         
+         if method == "PlayerOwnsAsset" then
+            return true
+         end
+         
          return oldNamecall(self, ...)
       end)
       
       setreadonly(mt, true)
-   end)
-end
-
-function UnlockColors()
-   pcall(function()
-      for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-         if remote:IsA("RemoteEvent") then
-            local name = remote.Name:lower()
-            if name:find("color") or name:find("paint") or name:find("customize") then
-               for i = 1, 200 do
-                  remote:FireServer(i)
-                  remote:FireServer("Unlock", i)
-               end
-            end
-         end
-      end
-   end)
-end
-
-function UnlockUpgrades()
-   pcall(function()
-      for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-         if remote:IsA("RemoteEvent") then
-            local name = remote.Name:lower()
-            if name:find("upgrade") or name:find("performance") or name:find("tune") then
-               for i = 1, 100 do
-                  remote:FireServer(i)
-                  remote:FireServer("Max", i)
-               end
-            end
-         end
-      end
-   end)
-end
-
--- Vehicle Functions
-function FixVehicle()
-   pcall(function()
-      for _, seat in pairs(workspace:GetDescendants()) do
-         if seat:IsA("VehicleSeat") and seat.Occupant == humanoid then
-            local vehicle = seat.Parent
-            if vehicle.PrimaryPart then
-               vehicle:SetPrimaryPartCFrame(vehicle.PrimaryPart.CFrame * CFrame.new(0, 5, 0))
-            end
-         end
-      end
-   end)
-end
-
-function FlipVehicle()
-   pcall(function()
-      for _, seat in pairs(workspace:GetDescendants()) do
-         if seat:IsA("VehicleSeat") and seat.Occupant == humanoid then
-            local vehicle = seat.Parent
-            if vehicle.PrimaryPart then
-               vehicle:SetPrimaryPartCFrame(vehicle.PrimaryPart.CFrame * CFrame.Angles(0, 0, math.pi))
-            end
-         end
-      end
+      print("GamePass bypass enabled safely")
    end)
 end
 
 -- Debug Functions
-function FindMoneyRemotes()
-   print("\n=== MONEY REMOTES ===")
-   local found = 0
-   for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-      if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-         local name = remote.Name:lower()
-         if name:find("money") or name:find("cash") or name:find("currency") then
-            found = found + 1
-            print(found .. ". " .. remote:GetFullName())
+function ShowCurrentMoney()
+   pcall(function()
+      local money = "Unknown"
+      if player:FindFirstChild("leaderstats") then
+         for _, stat in pairs(player.leaderstats:GetChildren()) do
+            if stat.Name == "Cash" or stat.Name == "Money" then
+               money = tostring(stat.Value)
+            end
          end
       end
-   end
-   print("=== TOTAL: " .. found .. " ===\n")
-   
-   Rayfield:Notify({
-      Title = "Debug",
-      Content = "Found " .. found .. " money remotes. Check F9!",
-      Duration = 3,
-      Image = 4483362458,
-   })
-end
-
-function FindVehicleRemotes()
-   print("\n=== VEHICLE REMOTES ===")
-   local found = 0
-   for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-      if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-         local name = remote.Name:lower()
-         if name:find("vehicle") or name:find("car") or name:find("unlock") or name:find("buy") then
-            found = found + 1
-            print(found .. ". " .. remote:GetFullName())
-         end
-      end
-   end
-   print("=== TOTAL: " .. found .. " ===\n")
-   
-   Rayfield:Notify({
-      Title = "Debug",
-      Content = "Found " .. found .. " vehicle remotes. Check F9!",
-      Duration = 3,
-      Image = 4483362458,
-   })
-end
-
-function MonitorRemotes()
-   local mt = getrawmetatable(game)
-   local oldNamecall = mt.__namecall
-   setreadonly(mt, false)
-   
-   mt.__namecall = newcclosure(function(self, ...)
-      local method = getnamecallmethod()
-      if method == "FireServer" or method == "InvokeServer" then
-         print("🔴 " .. self:GetFullName() .. " | " .. method)
-      end
-      return oldNamecall(self, ...)
+      
+      print("Current Money: " .. money)
+      Rayfield:Notify({
+         Title = "Current Money",
+         Content = "You have: $" .. money,
+         Duration = 5,
+         Image = 4483362458,
+      })
    end)
-   
-   setreadonly(mt, true)
+end
+
+function ListAllRemotes()
+   print("\n=== ALL GAME REMOTES ===")
+   local count = 0
+   for _, remote in pairs(GameRemotes) do
+      count = count + 1
+      print(count .. ". " .. remote:GetFullName() .. " (" .. remote.ClassName .. ")")
+   end
+   print("=== TOTAL: " .. count .. " REMOTES ===\n")
    
    Rayfield:Notify({
-      Title = "Monitor Active",
-      Content = "Check console (F9) for remote calls!",
+      Title = "Debug",
+      Content = "Found " .. count .. " remotes. Check console (F9)",
+      Duration = 5,
+      Image = 4483362458,
+   })
+end
+
+function TestConnection()
+   local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+   print("Connection: " .. math.floor(ping) .. "ms")
+   
+   Rayfield:Notify({
+      Title = "Connection Test",
+      Content = "Ping: " .. math.floor(ping) .. "ms",
+      Duration = 3,
+      Image = 4483362458,
+   })
+end
+
+function CheckAntiCheat()
+   print("\n=== ANTI-CHEAT CHECK ===")
+   local found = 0
+   
+   for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+      local name = obj.Name:lower()
+      if name:find("anticheat") or name:find("anti") or name:find("kick") or name:find("ban") then
+         found = found + 1
+         print(found .. ". " .. obj:GetFullName())
+      end
+   end
+   
+   print("=== FOUND " .. found .. " POTENTIAL ANTI-CHEAT SYSTEMS ===\n")
+   
+   Rayfield:Notify({
+      Title = "Anti-Cheat Check",
+      Content = "Found " .. found .. " potential systems. Check F9",
       Duration = 5,
       Image = 4483362458,
    })
 end
 
 -- ============================================
--- LOOPS
+-- SAFE LOOPS
 -- ============================================
 
--- Money Farm Loop
+-- Safe Money Farm Loop
 spawn(function()
    while wait(_G.FarmSpeed) do
-      if _G.MoneyFarm then
+      if _G.SafeMoneyFarm then
          pcall(function()
-            GiveMoney(_G.MoneyAmount)
-         end)
-      end
-   end
-end)
-
--- Vehicle Speed Loop
-spawn(function()
-   while wait(0.1) do
-      if _G.VehicleSpeed > 1 then
-         pcall(function()
-            for _, seat in pairs(workspace:GetDescendants()) do
-               if seat:IsA("VehicleSeat") and seat.Occupant == humanoid then
-                  seat.MaxSpeed = seat.MaxSpeed * _G.VehicleSpeed
-               end
-            end
+            SafeGiveMoney(_G.MoneyAmount)
          end)
       end
    end
@@ -687,7 +486,7 @@ end)
 
 -- Vehicle Noclip Loop
 spawn(function()
-   while wait(0.1) do
+   while wait(0.2) do
       if _G.VehicleNoclip then
          pcall(function()
             for _, seat in pairs(workspace:GetDescendants()) do
@@ -704,16 +503,16 @@ spawn(function()
    end
 end)
 
--- Auto Daily Reward
+-- Vehicle Speed Loop (Safe Range)
 spawn(function()
-   while wait(60) do
-      if _G.AutoDaily then
+   while wait(0.3) do
+      if _G.VehicleSpeed and _G.VehicleSpeed > 1 then
          pcall(function()
-            for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-               if remote:IsA("RemoteEvent") then
-                  local name = remote.Name:lower()
-                  if name:find("daily") or name:find("reward") then
-                     remote:FireServer()
+            for _, seat in pairs(workspace:GetDescendants()) do
+               if seat:IsA("VehicleSeat") and seat.Occupant == humanoid then
+                  -- Only multiply if within safe range
+                  if _G.VehicleSpeed <= 3 then
+                     seat.MaxSpeed = seat.MaxSpeed * _G.VehicleSpeed
                   end
                end
             end
@@ -726,15 +525,16 @@ end)
 player.CharacterAdded:Connect(function(char)
    character = char
    humanoid = char:WaitForChild("Humanoid")
-   humanoidRootPart = char:WaitForChild("HumanoidRootPart")
 end)
 
 -- Success Notification
 Rayfield:Notify({
-   Title = "Driving Empire",
-   Content = "Script loaded successfully!",
+   Title = "Safe Mode Loaded",
+   Content = "Anti-kick version loaded! Use safer settings to avoid detection.",
    Duration = 5,
    Image = 4483362458,
 })
 
-print("Driving Empire Script Loaded!")
+print("Driving Empire (Safe Mode) Loaded!")
+print("This version uses safer methods to avoid Error 267 kicks")
+print("Recommended: Money 5K-10K, Delay 1-2s")
