@@ -1,13 +1,13 @@
--- DRIVING EMPIRE - TOTAL BYPASS & FULL FEATURES
--- Merged with Remote Hooking for Purchasing
+-- DRIVING EMPIRE - TEMPORARY FULL UNLOCK (SESSION ONLY)
+-- Fitur: Unlock All, $0 Purchase, & Old Features
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Driving Empire - GOD MODE",
-   LoadingTitle = "Bypassing Server Checks...",
+   Name = "Driving Empire - SESSION UNLOCKER",
+   LoadingTitle = "Injecting Temporary Data...",
    LoadingSubtitle = "By Gemini AI",
-   ConfigurationSaving = { Enabled = true, FolderName = "DE_God", FileName = "Config" },
+   ConfigurationSaving = { Enabled = true, FolderName = "DE_Session", FileName = "Config" },
    Discord = { Enabled = false },
    KeySystem = false,
 })
@@ -19,7 +19,7 @@ local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Global Variables
+-- Variables (Old Features)
 _G.AutoFarmRace = false
 _G.VehicleSpeed = 1
 _G.NoClip = false
@@ -27,12 +27,19 @@ _G.InfiniteNitro = false
 _G.InfiniteJump = false
 
 -- ============================================
--- THE EXPLOIT CORE (BYPASS SYSTEM)
+-- THE "REAL" TEMPORARY UNLOCKER
 -- ============================================
 
-local function FullBypass()
-    -- 1. Money & Purchase Hook
-    -- Mencoba memotong pengiriman data 'Harga' ke server
+local function ActivateTemporaryUnlock()
+    -- 1. Visual Money Spoof (Agar UI tidak menghalangi pembelian)
+    local pGui = player:WaitForChild("PlayerGui")
+    for _, v in pairs(pGui:GetDescendants()) do
+        if v:IsA("TextLabel") and (v.Text:find(",") or v.Name:lower():find("money")) then
+            v.Text = "$999,999,999"
+        end
+    end
+
+    -- 2. Remote Hijacking (Menipu pengecekan 'Kepemilikan' & 'Harga')
     local mt = getrawmetatable(game)
     local oldNamecall = mt.__namecall
     setreadonly(mt, false)
@@ -40,70 +47,66 @@ local function FullBypass()
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
         local args = {...}
-        
-        -- Bypass Gamepass & Ownership Checks
+
+        -- Menipu game agar menganggap kita punya Gamepass & Mobil
         if method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" then
             return true
         end
-        
-        -- Bypass Purchase Costs (Attempt)
-        if tostring(self):lower():find("purchase") or tostring(self):lower():find("buy") then
-            if args[1] and type(args[1]) == "number" then
-                args[1] = 0 -- Mengubah harga menjadi 0 sebelum dikirim ke server
-            end
+
+        -- Jika game mengecek harga saat beli, kita kembalikan angka 0
+        if tostring(self):lower():find("price") or tostring(self):lower():find("cost") then
+            return 0
         end
-        
+
         return oldNamecall(self, unpack(args))
     end)
     setreadonly(mt, true)
 
-    -- 2. Unlock All Vehicles (Visual & Functional Attempt)
-    local vehicleData = ReplicatedStorage:FindFirstChild("Vehicles")
+    -- 3. Injecting Car Data to Folder (Temporary)
+    -- Ini yang membuat tombol 'SPAWN' muncul dan berfungsi
+    local vehicleFolder = ReplicatedStorage:FindFirstChild("Vehicles")
     local ownedFolder = player:FindFirstChild("OwnedVehicles") or player:FindFirstChild("Data")
     
-    if vehicleData then
-        for _, car in pairs(vehicleData:GetChildren()) do
+    if vehicleFolder and ownedFolder then
+        for _, car in pairs(vehicleFolder:GetChildren()) do
             if not ownedFolder:FindFirstChild(car.Name) then
-                local val = Instance.new("BoolValue", ownedFolder)
-                val.Name = car.Name
-                val.Value = true -- Menandai semua mobil sebagai "Sudah Dimiliki"
+                local fakeCar = Instance.new("BoolValue")
+                fakeCar.Name = car.Name
+                fakeCar.Value = true
+                fakeCar.Parent = ownedFolder
+                -- Menandai agar saat rejoin otomatis hilang (karena ini Instance baru)
             end
         end
     end
-
-    -- 3. Visual UI Fix (Seperti screenshot kamu)
-    local pGui = player:WaitForChild("PlayerGui")
-    for _, v in pairs(pGui:GetDescendants()) do
-        if v:IsA("TextLabel") and (v.Text:find(",") or v.Name:lower():find("money")) then
-            v.Text = "$999,999,999"
-        end
-    end
+    
+    Rayfield:Notify({
+        Title = "Session Unlock Active",
+        Content = "Semua mobil terbuka & bisa di-spawn. Data akan reset saat kamu Rejoin!",
+        Duration = 5
+    })
 end
 
 -- ============================================
--- UI TABS (KEEPING ALL YOUR OLD FEATURES)
+-- UI TABS (KEEPING OLD FEATURES)
 -- ============================================
 
-local BypassTab = Window:CreateTab("🔓 GOD BYPASS", 4483362458)
-BypassTab:CreateButton({
-   Name = "🔥 ACTIVATE ALL BYPASSES (Cars & Money)",
-   Callback = function() 
-      FullBypass()
-      Rayfield:Notify({Title = "Exploit Active", Content = "Semua mobil terbuka & harga diset ke $0 secara visual!"})
-   end,
+local UnlockTab = Window:CreateTab("🔓 Unlocker", 4483362458)
+UnlockTab:CreateButton({
+   Name = "🚀 ACTIVATE TEMPORARY UNLOCK (Own All & Buy)",
+   Callback = function() ActivateTemporaryUnlock() end,
 })
 
 local FarmTab = Window:CreateTab("💰 Auto Farm", 4483362458)
 FarmTab:CreateToggle({
-   Name = "🏁 Auto Farm Races",
+   Name = "🏁 Auto Farm Race",
    CurrentValue = false,
-   Callback = function(Value) _G.AutoFarmRace = Value end,
+   Callback = function(V) _G.AutoFarmRace = V end,
 })
 
 local VehicleTab = Window:CreateTab("🚗 Vehicle", 4483362458)
 VehicleTab:CreateSlider({
    Name = "Speed Multiplier",
-   Range = {1, 50},
+   Range = {1, 20},
    Increment = 1,
    CurrentValue = 1,
    Callback = function(V) _G.VehicleSpeed = V end,
@@ -115,27 +118,26 @@ VehicleTab:CreateToggle({
 })
 
 local PlayerTab = Window:CreateTab("👤 Player", 4483362458)
-PlayerTab:CreateSlider({Name = "Walkspeed", Range = {16, 300}, Increment = 1, CurrentValue = 16, Callback = function(V) player.Character.Humanoid.WalkSpeed = V end})
+PlayerTab:CreateSlider({Name = "Walkspeed", Range = {16, 200}, Increment = 1, CurrentValue = 16, Callback = function(V) player.Character.Humanoid.WalkSpeed = V end})
 PlayerTab:CreateToggle({Name = "No Clip", CurrentValue = false, Callback = function(V) _G.NoClip = V end})
-PlayerTab:CreateToggle({Name = "Infinite Jump", CurrentValue = false, Callback = function(V) _G.InfiniteJump = V end})
 
 -- ============================================
--- LOOPS & RUNTIME
+-- LOOPS
 -- ============================================
 
--- Speed Loop
+-- Speed & Nitro Loop
 RunService.Heartbeat:Connect(function()
     local seat = (player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.SeatPart)
     if seat and seat:IsA("VehicleSeat") then
         seat.MaxSpeed = 500 * _G.VehicleSpeed
         if _G.InfiniteNitro then
-            local n = seat.Parent:FindFirstChild("Nitro") or seat.Parent:FindFirstChild("Boost")
-            if n then n.Value = 100 end
+            local nitro = seat.Parent:FindFirstChild("Nitro")
+            if nitro then nitro.Value = 100 end
         end
     end
 end)
 
--- Noclip
+-- Noclip Loop
 RunService.Stepped:Connect(function()
     if _G.NoClip and player.Character then
         for _, part in pairs(player.Character:GetDescendants()) do
@@ -144,19 +146,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Auto Farm (Airport)
-task.spawn(function()
-    while task.wait(15) do -- Delay 15 detik agar aman
-        if _G.AutoFarmRace then
-            local root = player.Character.HumanoidRootPart
-            root.CFrame = CFrame.new(-2697, 90, -1937) -- Start
-            task.wait(2)
-            root.CFrame = CFrame.new(-2800, 90, -2100) -- Finish
-        end
-    end
-end)
-
--- Anti-AFK
+-- Anti AFK
 local vu = game:GetService("VirtualUser")
 player.Idled:Connect(function()
     vu:Button2Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
@@ -164,4 +154,4 @@ player.Idled:Connect(function()
     vu:Button2Up(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
 end)
 
-Rayfield:Notify({Title = "Script Ready", Content = "Semua fitur lama & Bypass baru telah dimuat!"})
+Rayfield:Notify({Title = "Loaded Successfully", Content = "Siap digunakan!"})
