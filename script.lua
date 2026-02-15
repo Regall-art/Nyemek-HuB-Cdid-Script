@@ -1,24 +1,23 @@
--- NYEMEK HUB - CAR DEALERSHIP TYCOON (CDT) ULTIMATE
--- Fitur: Auto Build, Money Add, Unlock Cars, Bypass Gamepass + Fitur Lama
+-- NYEMEK HUB - CAR DEALERSHIP TYCOON (FIXED VERSION)
+-- Re-checking paths for Auto Build, Money, and Cars
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Nyemek HuB", 
-   LoadingTitle = "Nyemek HuB: CDT God Mode",
-   LoadingSubtitle = "By Gemini AI",
+   LoadingTitle = "Nyemek HuB: CDT Aggressive",
+   LoadingSubtitle = "Scanning Game Folders...",
    ConfigurationSaving = { Enabled = true, FolderName = "NyemekHub_CDT", FileName = "Config" },
    Discord = { Enabled = false },
    KeySystem = false,
 })
 
--- Services
+-- Services & Player
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- Variables
+-- Global Variables
 _G.AutoBuild = false
 _G.AutoCollect = false
 _G.VehicleSpeed = 1
@@ -26,12 +25,11 @@ _G.InfiniteNitro = false
 _G.NoClip = false
 
 -- ============================================
--- THE GOD FUNCTIONS (CDT SPECIAL)
+-- THE CORE FUNCTIONS (RE-CHECKED)
 -- ============================================
 
-local function ActivateGodMode()
-    -- 1. VISUAL MONEY ADD ($999,999,999)
-    -- Manipulasi angka uang agar bisa digunakan untuk UI & Screenshot
+local function FullCDTUnlock()
+    -- 1. Visual Money Manipulation ($999,999,999)
     task.spawn(function()
         while true do
             pcall(function()
@@ -48,43 +46,43 @@ local function ActivateGodMode()
         end
     end)
 
-    -- 2. BYPASS ALL GAMEPASS (Visual & Logic Access)
-    local mt = getrawmetatable(game)
-    local oldNamecall = mt.__namecall
-    setreadonly(mt, false)
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        if method == "UserOwnsGamePassAsync" or method == "PlayerOwnsAsset" then
-            return true
-        end
-        return oldNamecall(self, unpack({...}))
-    end)
-    setreadonly(mt, true)
-
-    -- 3. UNLOCK ALL CARS (Session Only)
+    -- 2. Unlock Cars (Injecting into CDT Data Folder)
+    -- CDT biasanya menyimpan data di folder 'OwnedCars' atau 'Data'
     local carFolder = ReplicatedStorage:FindFirstChild("Cars")
-    local owned = player:FindFirstChild("OwnedCars") or player:FindFirstChild("Data")
-    if carFolder and owned then
+    local ownedFolder = player:FindFirstChild("OwnedCars") or player:FindFirstChild("Data") or player:FindFirstChild("leaderstats")
+    
+    if carFolder and ownedFolder then
         for _, car in pairs(carFolder:GetChildren()) do
-            if not owned:FindFirstChild(car.Name) then
-                local b = Instance.new("BoolValue", owned)
+            if not ownedFolder:FindFirstChild(car.Name) then
+                local b = Instance.new("BoolValue")
                 b.Name = car.Name
                 b.Value = true
+                b.Parent = ownedFolder
             end
         end
     end
-    
-    Rayfield:Notify({Title = "Nyemek HuB", Content = "God Mode & Gamepass Bypass Aktif!"})
+
+    -- 3. Bypass Gamepass (Hooking)
+    local mt = getrawmetatable(game)
+    local old = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(self, ...)
+        if getnamecallmethod() == "UserOwnsGamePassAsync" then return true end
+        return old(self, ...)
+    end)
+    setreadonly(mt, true)
+
+    Rayfield:Notify({Title = "Nyemek HuB", Content = "Bypass Berhasil! Cek Uang & Mobil."})
 end
 
 -- ============================================
--- NYEMEK HUB TABS
+-- UI TABS
 -- ============================================
 
 local MainTab = Window:CreateTab("🔓 Unlocker", 4483362458)
 MainTab:CreateButton({
-   Name = "🔥 ACTIVATE ALL (Money, Cars, Gamepass)",
-   Callback = function() ActivateGodMode() end,
+   Name = "🚀 ACTIVATE ALL (Money, Cars, Gamepass)",
+   Callback = function() FullCDTUnlock() end,
 })
 
 local FarmTab = Window:CreateTab("💰 Auto Farm", 4483362458)
@@ -100,32 +98,35 @@ FarmTab:CreateToggle({
 })
 
 local VehicleTab = Window:CreateTab("🚗 Vehicle", 4483362458)
-VehicleTab:CreateSlider({Name = "Speed", Range = {1, 10}, Increment = 1, CurrentValue = 1, Callback = function(v) _G.VehicleSpeed = v end})
-VehicleTab:CreateToggle({Name = "Infinite Nitro", CurrentValue = false, Callback = function(v) _G.InfiniteNitro = v end})
+VehicleTab:CreateSlider({Name = "Speed", Range = {1, 20}, Increment = 1, CurrentValue = 1, Callback = function(v) _G.VehicleSpeed = v end})
+VehicleTab:CreateToggle({Name = "Nitro", CurrentValue = false, Callback = function(v) _G.InfiniteNitro = v end})
 
 local PlayerTab = Window:CreateTab("👤 Player", 4483362458)
 PlayerTab:CreateSlider({Name = "Walkspeed", Range = {16, 200}, CurrentValue = 16, Callback = function(v) player.Character.Humanoid.WalkSpeed = v end})
 PlayerTab:CreateToggle({Name = "No Clip", CurrentValue = false, Callback = function(v) _G.NoClip = v end})
 
 -- ============================================
--- RUNTIME LOOPS
+-- LOOPS
 -- ============================================
 
 -- Auto Build & Collect
 task.spawn(function()
-    while task.wait(0.5) do
-        if _G.AutoBuild then
-            -- Mencari tombol beli/upgrade di dealer milikmu
+    while task.wait(0.3) do
+        if _G.AutoBuild and player.Character then
+            -- CDT Auto Build Logic
             for _, v in pairs(game.Workspace:GetDescendants()) do
-                if v:IsA("TouchTransmitter") and v.Parent.Name == "BuyButton" then
-                    firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 0)
-                    firetouchinterest(player.Character.HumanoidRootPart, v.Parent, 1)
+                if v.Name == "BuyButton" or v.Name == "UpgradeButton" then
+                    local touch = v:FindFirstChildOfClass("TouchTransmitter")
+                    if touch then
+                        firetouchinterest(player.Character.HumanoidRootPart, v, 0)
+                        firetouchinterest(player.Character.HumanoidRootPart, v, 1)
+                    end
                 end
             end
         end
         if _G.AutoCollect then
-            local rem = ReplicatedStorage:FindFirstChild("Remotes")
-            if rem and rem:FindFirstChild("CollectCash") then
+            local rem = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage:FindFirstChild("Events")
+            if rem:FindFirstChild("CollectCash") then
                 rem.CollectCash:FireServer()
             end
         end
@@ -133,19 +134,19 @@ task.spawn(function()
 end)
 
 -- Old Features: Speed & Nitro
-RunService.Heartbeat:Connect(function()
+game:GetService("RunService").Heartbeat:Connect(function()
     local seat = (player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.SeatPart)
     if seat and seat:IsA("VehicleSeat") then
-        seat.MaxSpeed = 300 * _G.VehicleSpeed
+        if _G.VehicleSpeed > 1 then seat.MaxSpeed = 500 * _G.VehicleSpeed end
         if _G.InfiniteNitro then
-            local s = seat.Parent:FindFirstChild("Stats")
-            if s and s:FindFirstChild("Nitro") then s.Nitro.Value = 100 end
+            local n = seat.Parent:FindFirstChild("Nitro") or seat.Parent:FindFirstChild("Stats")
+            if n and n:FindFirstChild("Nitro") then n.Nitro.Value = 100 end
         end
     end
 end)
 
 -- NoClip
-RunService.Stepped:Connect(function()
+game:GetService("RunService").Stepped:Connect(function()
     if _G.NoClip and player.Character then
         for _, v in pairs(player.Character:GetDescendants()) do
             if v:IsA("BasePart") then v.CanCollide = false end
@@ -153,4 +154,4 @@ RunService.Stepped:Connect(function()
     end
 end)
 
-Rayfield:Notify({Title = "Nyemek HuB Loaded", Content = "Selamat bersenang-senang di CDT!"})
+Rayfield:Notify({Title = "Nyemek HuB", Content = "Script Ready! Jika tombol tidak muncul, klik Activate All."})
