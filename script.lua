@@ -1,12 +1,12 @@
--- NYEMEK HUB - FINAL SESSION BYPASS
--- Target: UI Manipulation for All Categories (Car, Heli, Boat, Motor)
+-- NYEMEK HUB - REPLICATED STORAGE INJECTOR (V4)
+-- Fokus: Memaksa manipulasi UI dengan klon data dari ReplicatedStorage
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Nyemek HuB", 
-   LoadingTitle = "Nyemek HuB: Final Bypass",
-   LoadingSubtitle = "Hooking Network Events...",
+   LoadingTitle = "Nyemek HuB: Deep Scanning...",
+   LoadingSubtitle = "Searching ReplicatedStorage Assets",
    ConfigurationSaving = { Enabled = true, FolderName = "NyemekHub_DE", FileName = "Config" },
    Discord = { Enabled = false },
    KeySystem = false,
@@ -24,93 +24,78 @@ _G.NoClip = false
 _G.InfiniteNitro = false
 
 -- ============================================
--- THE ULTIMATE UI HOOK (NYEMEK METHOD)
+-- CORE: REPLICATED STORAGE DEEP INJECTION
 -- ============================================
 
-local function NyemekFullUnlock()
-    -- 1. Visual Money Manipulation
-    local pGui = player:WaitForChild("PlayerGui")
+local function NyemekDeepInject()
+    -- 1. Visual Money (Loop agar tidak berubah balik)
     task.spawn(function()
-        while task.wait(0.5) do
-            for _, v in pairs(pGui:GetDescendants()) do
-                if v:IsA("TextLabel") and (v.Text:find(",") or v.Name:lower():find("money")) then
-                    v.Text = "$999,999,999"
-                end
-            end
-        end
-    end)
-
-    -- 2. Hooking Metatable (Network Hijacking)
-    -- Ini akan menipu UI agar menganggap kita punya SEMUA asset
-    local mt = getrawmetatable(game)
-    local oldNamecall = mt.__namecall
-    setreadonly(mt, false)
-
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-
-        -- Bypass Pengecekan Kepemilikan (Cars, Heli, Boat, Motor)
-        if method == "InvokeServer" and tostring(self) == "GetPlayerData" then
-            local data = oldNamecall(self, unpack(args))
-            if type(data) == "table" and data.Vehicles then
-                -- Injeksi paksa ke tabel data UI
-                for _, folder in pairs(ReplicatedStorage.Vehicles:GetChildren()) do
-                    data.Vehicles[folder.Name] = true
-                end
-                return data
-            end
-        end
-
-        -- Bypass Remote untuk Spawn
-        if method == "FireServer" and (tostring(self):find("Spawn") or tostring(self):find("Equip")) then
-            return oldNamecall(self, unpack(args))
-        end
-
-        return oldNamecall(self, unpack(args))
-    end)
-    setreadonly(mt, true)
-
-    -- 3. Client-Side Folder Injection (Double Protection)
-    local ownedFolder = player:FindFirstChild("OwnedVehicles") or player:FindFirstChild("Data")
-    if ownedFolder then
-        -- Mencari di semua folder aset game
-        local assetFolders = {
-            ReplicatedStorage:FindFirstChild("Vehicles"),
-            ReplicatedStorage:FindFirstChild("Helicopters"),
-            ReplicatedStorage:FindFirstChild("Planes"),
-            ReplicatedStorage:FindFirstChild("Boats"),
-            ReplicatedStorage:FindFirstChild("Bikes")
-        }
-        
-        for _, folder in pairs(assetFolders) do
-            if folder then
-                for _, asset in pairs(folder:GetChildren()) do
-                    if not ownedFolder:FindFirstChild(asset.Name) then
-                        local fake = Instance.new("BoolValue", ownedFolder)
-                        fake.Name = asset.Name
-                        fake.Value = true
+        while true do
+            local pGui = player:FindFirstChild("PlayerGui")
+            if pGui then
+                for _, v in pairs(pGui:GetDescendants()) do
+                    if v:IsA("TextLabel") and (v.Text:find(",") or v.Name:lower():find("money")) then
+                        v.Text = "$999,999,999"
                     end
+                end
+            end
+            task.wait(1)
+        end
+    end)
+
+    -- 2. Deep Scanning ReplicatedStorage
+    -- Mencari folder yang berisi data kendaraan/item
+    local ownedFolder = player:FindFirstChild("OwnedVehicles") or player:FindFirstChild("Data")
+    
+    if not ownedFolder then
+        Rayfield:Notify({Title = "Error", Content = "Folder data player tidak ditemukan!"})
+        return
+    end
+
+    local categories = {
+        "Vehicles", "Helicopters", "Planes", "Boats", "Bikes", 
+        "Motorcycles", "VehicleData", "CarData"
+    }
+
+    for _, catName in pairs(categories) do
+        local folder = ReplicatedStorage:FindFirstChild(catName)
+        if folder then
+            for _, asset in pairs(folder:GetChildren()) do
+                -- Injeksi: Membuat tiruan data kepemilikan di folder Player
+                if not ownedFolder:FindFirstChild(asset.Name) then
+                    local fakeVal = Instance.new("BoolValue")
+                    fakeVal.Name = asset.Name
+                    fakeVal.Value = true
+                    fakeVal.Parent = ownedFolder
                 end
             end
         end
     end
 
+    -- 3. UI Refresh Bypass
+    -- Memaksa UI untuk "berpikir" bahwa data baru saja di-load dari server
+    local garageUI = player.PlayerGui:FindFirstChild("Garage") or player.PlayerGui:FindFirstChild("Menu")
+    if garageUI then
+        garageUI.Enabled = false
+        task.wait(0.2)
+        garageUI.Enabled = true
+    end
+
     Rayfield:Notify({
         Title = "Nyemek HuB",
-        Content = "UI Bypass Active! Re-open your Garage/Menu now.",
+        Content = "Deep Injection Complete! Cek semua kategori di Garage.",
         Duration = 5
     })
 end
 
 -- ============================================
--- NYEMEK HUB TABS
+-- UI TABS (NYEMEK HUB)
 -- ============================================
 
 local MainTab = Window:CreateTab("🔓 Unlocker", 4483362458)
 MainTab:CreateButton({
-   Name = "🚀 ACTIVATE NYEMEK BYPASS (All Vehicles & UI)",
-   Callback = function() NyemekFullUnlock() end,
+   Name = "🚀 FORCE INJECT FROM REPLICATED STORAGE",
+   Callback = function() NyemekDeepInject() end,
 })
 
 local FarmTab = Window:CreateTab("💰 Auto Farm", 4483362458)
@@ -125,7 +110,7 @@ PlayerTab:CreateSlider({Name = "Walkspeed", Range = {16, 200}, CurrentValue = 16
 PlayerTab:CreateToggle({Name = "No Clip", CurrentValue = false, Callback = function(v) _G.NoClip = v end})
 
 -- ============================================
--- RUNTIME LOOPS
+-- RUNTIME
 -- ============================================
 
 game:GetService("RunService").Heartbeat:Connect(function()
@@ -148,12 +133,4 @@ game:GetService("RunService").Stepped:Connect(function()
     end
 end)
 
--- Anti AFK
-local vu = game:GetService("VirtualUser")
-player.Idled:Connect(function()
-    vu:Button2Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    vu:Button2Up(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
-end)
-
-Rayfield:Notify({Title = "Nyemek HuB", Content = "Script Hybrid Loaded!"})
+Rayfield:Notify({Title = "Nyemek HuB", Content = "Siap untuk Deep Injection!"})
